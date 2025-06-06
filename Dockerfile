@@ -1,27 +1,32 @@
-FROM python:3.11
+FROM python:3.11 AS builder
 
-#Setting workdir
-WORKDIR /app
+# Setting workdir
+WORKDIR /home/app
 
-#Installing FFmpeg
-RUN apt-get update -qq && apt-get install ffmpeg -y
+# Install FFmpeg
+RUN apt-get update -qq \
+        && apt-get install ffmpeg -y \
+		&& rm -rf /var/lib/apt/lists/*
 
-#Installing requirements
-ADD src/requirements.txt .
-RUN pip install -r requirements.txt
-
-#Copying Gifski binaries
+# Copy Gifski binaries
 COPY bin/gifski-1_32_0 /usr/local/bin
 
-#Setting Web enviroment variables
-ENV FLASK_APP=/app/app.py
-ENV FLASK_ENV=development
-ENV PORT=80
+# Install requirements
+COPY src/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-#Exposing app.py port
-EXPOSE 80
-
+# Setting Web enviroment variable
+ENV FLASK_APP=/home/app/app.py
 COPY src/ .
 
-CMD flask run --host=0.0.0.0 -p 80 --debug
-#CMD gunicorn -b :80 -w 8 app:app
+# --target=debug
+FROM builder AS dev
+ENV FLASK_ENV=development
+EXPOSE 5000
+CMD ["flask", "run", "--host=0.0.0.0", "-p", "5000", "--debug"]
+
+# --target=prod
+FROM builder AS prod
+ENV FLASK_ENV=production 
+EXPOSE 80
+CMD ["gunicorn", "-b", ":80", "-w", "8", "app:app"]

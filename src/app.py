@@ -6,8 +6,8 @@ from glob import glob
 from flask import Flask, render_template, request, send_file, redirect, url_for
 from markupsafe import escape
 
-app = Flask(__name__, root_path="/app")
-app.config['GIF_UPLOAD_FOLDER'] = "/app/gifs"
+app = Flask(__name__, root_path="/home/app")
+app.config['GIF_UPLOAD_FOLDER'] = "/home/app/gifs"
 app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024 # 20MB
 app.config['USED_STORAGE'] = 0
 app.config['MAX_FILESIZE'] = 1024 * 1024 * 1024 # 1GB
@@ -30,9 +30,9 @@ def convert():
     
     if(file.filename.endswith(".mp4")):
         # Checar se tem armazenamento o suficiente (Em progresso)
-        app.config['USED_STORAGE'] += file.seek(0, os.SEEK_END).tell() # Vai até o final do arquivo e vê a posição do ultimo byte
-        file.seek(0, os.SEEK_SET)
-        return app.config['USED_STORAGE']
+        # app.config['USED_STORAGE'] += file.seek(0, os.SEEK_END).tell() # Vai até o final do arquivo e vê a posição do ultimo byte
+        # file.seek(0, os.SEEK_SET)
+        # return app.config['USED_STORAGE']
 
         # Salvar o arquivo
         filename = hex(secrets.randbits(128))[2:] # Gerar uma string hexadecimal aleatória de 32 caracteres
