@@ -10,23 +10,21 @@ app = Flask(__name__, root_path="/home/app")
 app.config['GIF_UPLOAD_FOLDER'] = "/home/app/gifs"
 app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024 # 20MB
 app.config['USED_STORAGE'] = 0
-app.config['MAX_FILESIZE'] = 1024 * 1024 * 1024 # 1GB
+app.config['MAX_STORAGE_SIZE'] = 500 * 1024 * 1024 # 500MB
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", maxFileSize=app.config['MAX_CONTENT_LENGTH'])
 
 @app.route("/convert", methods=['POST'])
 def convert():
     if 'file' not in request.files:
-        # TO DO, técnicamente é requisição post feita sem o campo de arquivo
-        return "Requisição POST feita sem arquivo anexado, voltando a página inicial"
+        return "Requisição POST feita sem arquivo anexado",
     
     file = request.files['file']
 
     if file.filename == '':
-        # TO DO
-        return "Nenhum arquivo selecionado, voltando a página inicial"
+        return render_template("redirect.html", reason="Nenhum arquivo selecionado, voltando a página inicial...")
     
     if(file.filename.endswith(".mp4")):
         # Checar se tem armazenamento o suficiente (Em progresso)
@@ -35,30 +33,30 @@ def convert():
         # return app.config['USED_STORAGE']
 
         # Salvar o arquivo
-        filename = hex(secrets.randbits(128))[2:] # Gerar uma string hexadecimal aleatória de 32 caracteres
+        filename = hex(secrets.randbits(64))[2:] # Gerar uma string hexadecimal aleatória de 16 caracteres
         filepath = os.path.join(app.config['GIF_UPLOAD_FOLDER'], filename + ".mp4")
         file.save(filepath)
 
-        # Convertendo o arquivo pra gif -- preciso fazer tratamento de erro melhor
+        # Convertendo o arquivo pra gif. Preciso fazer um tratamento de erro melhor
         os.system(f"ffmpeg -i {filepath} -v 0 -f yuv4mpegpipe - | gifski-1_32_0 -o {app.config['GIF_UPLOAD_FOLDER']}/{filename}.gif -")
         
-
         # Deletando o arquivo original
         try:
             os.remove(filepath)
         except:
-            return "Ocorreu um erro inesperado, o video original sumiu do servidor misteriosamente. Se o problema persistir entra em contato comigo no e-mail"
-        return redirect(url_for('get_gif', id=filename+".gif"))
-    return "Erro inesperado"
+            return "<h2>Ocorreu um erro inesperado, o video original sumiu do servidor misteriosamente. Se o problema persistir entra em contato comigo no e-mail<h2>"
+        
+        return redirect(url_for('get_gif', filename=filename+".gif"))
+    return "<h2>Erro inesperado</h2>"
 
-@app.route("/gif/<id>")
-def get_gif(id):
-    filepath = os.path.join(app.config['GIF_UPLOAD_FOLDER'], escape(id))
+@app.route("/gifs/<filename>")
+def get_gif(filename):
+    filepath = os.path.join(app.config['GIF_UPLOAD_FOLDER'], escape(filename))
     fileExists = os.path.isfile(filepath)
-    isGif = escape(id).endswith(".gif")
+    isGif = escape(filename).endswith(".gif")
 
     if not fileExists or not isGif:
-        return "Arquivo inválido, voltando a página inicial"
+        return "<h2>Arquivo inexistente</h2>", 404
 
     return send_file(filepath)
 

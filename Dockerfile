@@ -4,9 +4,9 @@ FROM python:3.11 AS builder
 WORKDIR /home/app
 
 # Install FFmpeg
-RUN apt-get update -qq \
-        && apt-get install ffmpeg -y \
-		&& rm -rf /var/lib/apt/lists/*
+RUN apt-get -y update \
+        && apt-get install -y --no-install-recommends ffmpeg  \
+        && rm -rf /var/lib/apt/lists/*
 
 # Copy Gifski binaries
 COPY bin/gifski-1_32_0 /usr/local/bin

@@ -2,16 +2,19 @@
 <html lang="pt-BR">
 
     <head>
+        <meta charset="utf-8"/>
         <title>Conversor de gif</title>
         <meta name="keywords" content="conversor gif, converter mp4 para gif"> <!-- adicionar tags sla -->
         <meta name="description" content="conversor de mp4 pra gif"> <!-- todo -->
+
+        <script type="text/javascript" src="/static/index.js"></script>
 
     </head>
 
     <body>
         <div>
             <form action="/convert" method="POST" enctype="multipart/form-data">
-                <input name="file" type="file" accept=".mp4,.mov,.mkv" required>
+                <input onchange="checkFileSize(this, Number('{{ maxFileSize }}'))" name="file" type="file" accept=".mp4,.mov,.mkv" required>
                 <input type="submit">
             </form>
         </div>
