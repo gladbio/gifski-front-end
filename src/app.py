@@ -1,16 +1,26 @@
 # IMPORTANTE: Saber mais sobre a função Vsync (deprecated) e fps_mode, e se possivel adicionar opções no site
 # por enquanto só funciona com gifs de framerate constante (CFR)
+# TODO: multithreading (pra cada usuário), compartilhamento de recurso (a conversão ta feita no cpu nas mesmas threads q o servidor ta rodando), tratamento de erro (ainda deve ter uns comportamentos inesperados)
 
 import secrets, os
 from glob import glob
+from werkzeug.utils import secure_filename
 from flask import Flask, render_template, request, send_file, redirect, url_for
-from markupsafe import escape
+from pathlib import PureWindowsPath, PurePosixPath
 
-app = Flask(__name__, root_path="/home/app")
-app.config['GIF_UPLOAD_FOLDER'] = "/home/app/gifs"
+app = Flask(__name__)
+app.config['GIF_UPLOAD_FOLDER'] = "./gifs"
 app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024 # 20MB
 app.config['USED_STORAGE'] = 0
 app.config['MAX_STORAGE_SIZE'] = 500 * 1024 * 1024 # 500MB
+
+def videoToGif(videoFilePath, convertedFilename):
+    if(os.name == "posix"):
+        os.system( str( PurePosixPath(f"ffmpeg -i {videoFilePath} -v 0 -f yuv4mpegpipe - | gifski-1_32_0 -o {app.config['GIF_UPLOAD_FOLDER']}/{convertedFilename}.gif -")))
+    elif(os.name == "nt"):
+        os.system( str( PureWindowsPath(f"ffmpeg -i {videoFilePath} -v 0 -f yuv4mpegpipe - | ../bin/gifski-1_32_0.exe -o {app.config['GIF_UPLOAD_FOLDER']}/{convertedFilename}.gif -")))
+    else:
+        raise SystemError('Lista de sistemas compatíveis: Unix/Linux e Windows NT')
 
 @app.route("/")
 def index():
@@ -36,10 +46,8 @@ def convert():
         filename = hex(secrets.randbits(64))[2:] # Gerar uma string hexadecimal aleatória de 16 caracteres
         filepath = os.path.join(app.config['GIF_UPLOAD_FOLDER'], filename + ".mp4")
         file.save(filepath)
+        videoToGif(filepath, filename)
 
-        # Convertendo o arquivo pra gif. Preciso fazer um tratamento de erro melhor
-        os.system(f"ffmpeg -i {filepath} -v 0 -f yuv4mpegpipe - | gifski-1_32_0 -o {app.config['GIF_UPLOAD_FOLDER']}/{filename}.gif -")
-        
         # Deletando o arquivo original
         try:
             os.remove(filepath)
@@ -51,14 +59,14 @@ def convert():
 
 @app.route("/gifs/<filename>")
 def get_gif(filename):
-    filepath = os.path.join(app.config['GIF_UPLOAD_FOLDER'], escape(filename))
+    filepath = os.path.join(app.config['GIF_UPLOAD_FOLDER'], secure_filename(filename))
     fileExists = os.path.isfile(filepath)
-    isGif = escape(filename).endswith(".gif")
+    isGif = secure_filename(filename).endswith(".gif")
 
     if not fileExists or not isGif:
         return "<h2>Arquivo inexistente</h2>", 404
 
     return send_file(filepath)
 
-if __name__ == '__main__':  
-   app.run()
+if __name__ == '__main__':
+    app.run()
