@@ -14,7 +14,7 @@
     <body>
         <div>
             <form action="/convert" method="POST" enctype="multipart/form-data">
-                <input onchange="checkFileSize(this, Number('{{ maxFileSize }}'))" name="file" type="file" accept=".mp4,.mov,.mkv" required>
+                <input id="fileup" onchange="isFileValid(this, Number('{{ maxFileSize }}'))" name="file" type="file" accept="video/*" required>
                 <input type="submit">
             </form>
         </div>

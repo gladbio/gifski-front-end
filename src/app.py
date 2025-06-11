@@ -1,6 +1,6 @@
 # IMPORTANTE: Saber mais sobre a função Vsync (deprecated) e fps_mode, e se possivel adicionar opções no site
 # por enquanto só funciona com gifs de framerate constante (CFR)
-# TODO: multithreading (pra cada usuário), compartilhamento de recurso (a conversão ta feita no cpu nas mesmas threads q o servidor ta rodando), tratamento de erro (ainda deve ter uns comportamentos inesperados)
+# TODO: multithreading (pra cada usuário), compartilhamento de recurso (a conversão ta sendo feita nas mesmas threads q o aplicativo roda), tratamento de erro
 
 import secrets, os
 from glob import glob
@@ -48,14 +48,15 @@ def convert():
         file.save(filepath)
         videoToGif(filepath, filename)
 
-        # Deletando o arquivo original
+        # Deleta o arquivo original
         try:
             os.remove(filepath)
         except:
             return "<h2>Ocorreu um erro inesperado, o video original sumiu do servidor misteriosamente. Se o problema persistir entra em contato comigo no e-mail<h2>"
         
         return redirect(url_for('get_gif', filename=filename+".gif"))
-    return "<h2>Erro inesperado</h2>"
+    
+    return "<h2>Tipo de arquivo inválido</h2>"
 
 @app.route("/gifs/<filename>")
 def get_gif(filename):
