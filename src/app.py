@@ -1,9 +1,6 @@
-# IMPORTANTE: Saber mais sobre a função Vsync (deprecated) e fps_mode, e se possivel adicionar opções no site
-# por enquanto só funciona com gifs de framerate constante (CFR)
 # TODO: multithreading (pra cada usuário), compartilhamento de recurso (a conversão ta sendo feita nas mesmas threads q o aplicativo roda), tratamento de erro
 
 import secrets, os
-from glob import glob
 from werkzeug.utils import secure_filename
 from flask import Flask, render_template, request, send_file, redirect, url_for
 from pathlib import PureWindowsPath, PurePosixPath
@@ -67,7 +64,7 @@ def get_gif(filename):
     if not fileExists or not isGif:
         return "<h2>Arquivo inexistente</h2>", 404
 
-    return send_file(filepath)
+    return send_file(filepath, mimetype="image/gif")
 
 if __name__ == '__main__':
     app.run()
