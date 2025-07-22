@@ -67,4 +67,12 @@ def get_gif(filename):
     return send_file(filepath, mimetype="image/gif")
 
 if __name__ == '__main__':
+    if not os.path.exists(app.config['GIF_UPLOAD_FOLDER']):
+        try:
+            os.makedirs(app.config['GIF_UPLOAD_FOLDER'])
+        except OSError as e:
+            print(f'Não foi possível criar o diretório "{app.config['GIF_UPLOAD_FOLDER']}": {e.strerror}. Verifique as permissões.')
+            os.system("pause")
+            exit(1)
+        
     app.run()
